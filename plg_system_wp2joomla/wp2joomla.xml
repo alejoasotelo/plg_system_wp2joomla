@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+	<name>PLG_SYSTEM_WP2JOOMLA</name>
+	<author>Alejo Sotelo</author>
+	<creationDate>2023-05-25</creationDate>
+	<copyright>Copyright (C) 2020 Alejo Sotelo. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<authorEmail>soporte@alejosotelo.com.ar</authorEmail>
+	<authorUrl>https://alejosotelo.com.ar</authorUrl>
+	<version>1.0.1</version>
+	<description>PLG_SYSTEM_WP2JOOMLA_XML_DESCRIPTION</description>
+	<files>
+		<filename plugin="wp2joomla">wp2joomla.php</filename>
+		<folder>language</folder>
+		<folder>src</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB.plg_system_wp2joomla.ini</language>
+		<language tag="en-GB">en-GB.plg_system_wp2joomla.sys.ini</language>
+		<language tag="es-ES">es-ES.plg_system_wp2joomla.ini</language>
+		<language tag="es-ES">es-ES.plg_system_wp2joomla.sys.ini</language>
+	</languages>
+</extension>

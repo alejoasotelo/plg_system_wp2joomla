@@ -1,0 +1,56 @@
+version: '3.9'
+
+name: wp2joomla
+services:
+  joomla_php8:
+    image: joomla:4.3.1
+    restart: always
+    links:
+      - mysql:mysql
+    depends_on:
+      - mysql
+    ports:
+      - 80:80
+    expose:
+      - 9003
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      JOOMLA_DB_HOST: mysql
+      JOOMLA_DB_NAME: ${JOOMLA_DB_NAME}
+      JOOMLA_DB_USER: ${JOOMLA_DB_USER}
+      JOOMLA_DB_PASSWORD: ${JOOMLA_DB_PASSWORD}
+    volumes:
+      - ./config/php.ini:/usr/local/etc/php/conf.d/zphp.ini
+      - ./src:/var/www/html/cli/wp2joomla
+      - ./plg_system_wp2joomla:/var/www/html/plugins/system/wp2joomla
+      - joomla_files:/var/www/html
+    
+  mysql:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=${JOOMLA_DB_NAME}
+      - MYSQL_USER=${JOOMLA_DB_USER}
+      - MYSQL_PASSWORD=${JOOMLA_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${JOOMLA_DB_PASSWORD}
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+      - wp2joomla_db:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - mysql
+    ports:
+      - 81:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=${JOOMLA_DB_USER}
+      - PMA_PASSWORD=${JOOMLA_DB_PASSWORD}
+
+volumes:
+  wp2joomla_db:
+  joomla_files:
