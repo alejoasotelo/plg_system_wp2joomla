@@ -8,13 +8,16 @@ use Joomla\Console\Command\AbstractCommand;
 use Joomla\Database\DatabaseAwareTrait;
 use Joomla\Database\DatabaseInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Adapter\WordpressAdapter;
 
-class MigrateCategoriesCommand  extends AbstractCommand
+class MigrateArticlesCommand  extends AbstractCommand
 {
     
     use DatabaseAwareTrait;
@@ -25,7 +28,7 @@ class MigrateCategoriesCommand  extends AbstractCommand
      * @var    string
      * @since  4.0.0
      */
-    protected static $defaultName = 'migrate:categories';
+    protected static $defaultName = 'migrate:articles';
 
     /**
      * SymfonyStyle Object
@@ -103,17 +106,17 @@ class MigrateCategoriesCommand  extends AbstractCommand
             return Command::FAILURE;
         }
 
-        $this->migrateCategories();
+        $this->migrateArticles();
 
         return Command::SUCCESS;
     }
 
-    protected function migrateCategories()
+    protected function migrateArticles()
     {
         $db = $this->getDatabase();
         $adapter = new WordpressAdapter($db, $this->user);
         $importer = new Importer($adapter, $this->ioStyle, $db);
-        $importer->importCategories();
+        $importer->importArticles();
     }
 
     /**

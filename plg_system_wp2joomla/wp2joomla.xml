@@ -7,11 +7,27 @@
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
 	<authorEmail>soporte@alejosotelo.com.ar</authorEmail>
 	<authorUrl>https://alejosotelo.com.ar</authorUrl>
-	<version>1.0.1</version>
+	<version>1.0.5</version>
 	<description>PLG_SYSTEM_WP2JOOMLA_XML_DESCRIPTION</description>
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+	<update>
+		<schemas>
+			<schemapath type="mysql">sql/updates/mysql</schemapath>
+		</schemas>
+	</update>
 	<files>
 		<filename plugin="wp2joomla">wp2joomla.php</filename>
 		<folder>language</folder>
+		<folder>sql</folder>
 		<folder>src</folder>
 	</files>
 	<languages folder="language">

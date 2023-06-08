@@ -2,15 +2,16 @@
 
 \defined('_JEXEC') or die;
 
-JLoader::registerNamespace('\\AlejoASotelo\\Console', __DIR__ . '/src/AlejoASotelo/Console', false, true,'psr4');
+JLoader::registerNamespace('\\AlejoASotelo', __DIR__ . '/src/AlejoASotelo', false, true,'psr4');
 
 use Joomla\Application\ApplicationEvents;
+use Joomla\CMS\Console\Loader\WritableLoaderInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\SubscriberInterface;
-use AlejoASotelo\Console\MigrateCategoriesCommand;
 use Psr\Container\ContainerInterface;
-use Joomla\CMS\Console\Loader\WritableLoaderInterface;
+use AlejoASotelo\Console\MigrateCategoriesCommand;
+use AlejoASotelo\Console\MigrateArticlesCommand;
 
 class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
 {
@@ -32,8 +33,17 @@ class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
             },
             true
         );
+        
+        Factory::getContainer()->share(
+            'migrate.articles',
+            function (ContainerInterface $container) {
+                return new MigrateArticlesCommand($this->db);
+            },
+            true
+        );
 
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:categories', 'migrate.categories');
+        Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:articles', 'migrate.articles');
     }
 
 }

@@ -1,0 +1,36 @@
+# Workflow que genera un release en github con el zip del componente usando softprops/action-gh-release
+# 1. Se ejecuta cuando se crea un tag en la rama master
+# 2. ejecuta `php build/build-component.php` para generar el zip
+# 3. Crea un release en github con el zip generado en dist/plg_system_wp2joomla.zip
+# 4. Crea un tag en github con el nombre del tag creado en master
+
+name: Release
+on:
+  push:
+    tags:
+      - "*.*.*"
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build plugin
+        run: php build/build_plugin.php
+      - name: Build CHANGELOG.md
+        run: php build/build_changelog.php --from=$(git tag --sort=version:refname | tail -n2 | sort -r | tail -n1) --dest=dist/CHANGELOG.md
+      - name: Get release name
+        id: getReleaseName
+        run: echo ::set-output name=RELEASE_NAME::${GITHUB_REF/refs\/tags\//}
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/plg_system_wp2joomla.zip
+          name: v${{ steps.getReleaseName.outputs.RELEASE_NAME }}
+          tag_name: ${{ steps.getReleaseName.outputs.RELEASE_NAME }}
+          body_path: dist/CHANGELOG.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
