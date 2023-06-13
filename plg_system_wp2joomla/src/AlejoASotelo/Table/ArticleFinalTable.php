@@ -23,16 +23,18 @@ class ArticleFinalTable extends Content
     {
         $articleMigration = new MigratorArticleTable($this->_db);
         $articleMigration->load(['id_adapter' => $this->id_adapter]);
-        
+
         $this->id = $articleMigration->id_joomla;
         $this->isNew = !$articleMigration->id_joomla;
 
         try {
-        
+
             if (!parent::store($updateNulls)) {
                 return false;
             }
-            
+
+            $this->saveWorkflow($this->id);
+
             $articleMigration->title = $this->title;
             $articleMigration->id_joomla = $this->id;
             $articleMigration->id_adapter = $this->id_adapter;
@@ -51,5 +53,24 @@ class ArticleFinalTable extends Content
         }
 
         return $result;
+    }
+
+    public function saveWorkflow($idArticle)
+    {
+        $stageID = 1;
+        $extenstion = "'com_content.article'";
+
+        $query = $this->_db->getQuery(true);
+
+        $colums = array('item_id', 'stage_id', 'extension');
+        $values = array($idArticle, $stageID, $extenstion);
+
+        $query
+            ->insert('#__workflow_associations')
+            ->columns($colums)
+            ->values(implode(',', $values));
+
+        $this->_db->setQuery($query);
+        $this->_db->execute();
     }
 }

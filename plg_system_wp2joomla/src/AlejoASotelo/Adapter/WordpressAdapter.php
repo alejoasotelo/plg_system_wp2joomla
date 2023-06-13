@@ -91,6 +91,7 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
         foreach ($wpCategories as $wpCategory) {
             $category = new CategoryFinalTable($this->db);
             $category->id_adapter = $wpCategory->id;
+            $category->parent_id = 1;
             $category->title = $wpCategory->name;
             $category->alias = \JFilterOutput::stringURLSafe($wpCategory->name);
             $category->extension = 'com_content';
