@@ -6,6 +6,7 @@ namespace AlejoASotelo\Table;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Table\Content;
+use Joomla\CMS\Workflow\Workflow;
 use AlejoASotelo\Table\MigratorArticleTable;
 
 /**
@@ -57,20 +58,13 @@ class ArticleFinalTable extends Content
 
     public function saveWorkflow($idArticle)
     {
-        $stageID = 1;
-        $extenstion = "'com_content.article'";
+        $workflow = new Workflow('com_content.article');
+        $state = 1;
 
-        $query = $this->_db->getQuery(true);
+        if ($workflow->getAssociation($idArticle)) {
+            return $workflow->updateAssociations([$idArticle], $state);
+        }
 
-        $colums = array('item_id', 'stage_id', 'extension');
-        $values = array($idArticle, $stageID, $extenstion);
-
-        $query
-            ->insert('#__workflow_associations')
-            ->columns($colums)
-            ->values(implode(',', $values));
-
-        $this->_db->setQuery($query);
-        $this->_db->execute();
+        return $workflow->createAssociation($idArticle, $state);
     }
 }
