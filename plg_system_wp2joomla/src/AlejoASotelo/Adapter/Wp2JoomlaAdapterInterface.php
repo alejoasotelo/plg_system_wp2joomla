@@ -5,7 +5,7 @@ namespace AlejoASotelo\Adapter;
 interface Wp2JoomlaAdapterInterface
 {
 
-    public function __construct($db, $user);
+    public function __construct($db, $user, $wpContentPath);
 
     /**
      * Undocumented function

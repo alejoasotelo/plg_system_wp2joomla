@@ -26,10 +26,6 @@ class Importer
         $categories = $this->adapter->listCategories();
         $products = $this->adapter->listArticles();
 
-        // Procesar y almacenar los productos y categorías en tu componente Joomla
-        // ...
-
-
         $this->io->writeln("Categorías importadas:");
         foreach ($categories as $category) {
             $this->io->writeln($category->getName());

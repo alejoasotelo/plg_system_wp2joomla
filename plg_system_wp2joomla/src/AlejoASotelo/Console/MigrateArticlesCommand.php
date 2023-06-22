@@ -60,6 +60,16 @@ class MigrateArticlesCommand  extends AbstractCommand
      */
     protected $user;
 
+    /**
+     * Ruta de wordpress a la carpeta wp-content.
+     * Ejemplos: 
+     * - http://miweb.com.ar/wp-content o
+     * - http://miweb.com.ar/wordpress/wp-content
+     *
+     * @var string
+     */
+    protected $wpContentPath;
+
     protected $cache = [];
 
     /**
@@ -91,6 +101,7 @@ class MigrateArticlesCommand  extends AbstractCommand
         $this->configureIO($input, $output);
         $this->ioStyle->title('Ingrese un Id de usuario');
         $this->userId       = (int)$this->getStringFromOption('userId', 'Por favor ingrese un ID de usuario');
+        $this->wpContentPath       = $this->getStringFromOption('wpContentPath', 'Por favor ingrese la url a la carpeta wp-content de Wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
 
         if (!$this->userId) {
             $this->ioStyle->error("El usuario #" . $this->userId . " no existe!");
@@ -106,6 +117,12 @@ class MigrateArticlesCommand  extends AbstractCommand
             return Command::FAILURE;
         }
 
+        if (empty($this->wpContentPath)) {
+            $this->ioStyle->error('La ruta a la carpeta wp-content no puede estar vacía');
+
+            return Command::FAILURE;
+        }
+
         $this->migrateArticles();
 
         return Command::SUCCESS;
@@ -114,7 +131,7 @@ class MigrateArticlesCommand  extends AbstractCommand
     protected function migrateArticles()
     {
         $db = $this->getDatabase();
-        $adapter = new WordpressAdapter($db, $this->user);
+        $adapter = new WordpressAdapter($db, $this->user, $this->wpContentPath);
         $importer = new Importer($adapter, $this->ioStyle, $db);
         $importer->importArticles();
     }
@@ -174,6 +191,9 @@ class MigrateArticlesCommand  extends AbstractCommand
 
         $this->addOption('userId', null, InputOption::VALUE_REQUIRED, 'userId');
         $this->setDescription('Ingrese un ID de usuario');
+
+        $this->addOption('wpContentPath', null, InputOption::VALUE_REQUIRED, 'wpContentPath');
+        $this->setDescription('Ingrese la url a la carpeta wp-content de Wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
         $this->setHelp($help);
     }
 }

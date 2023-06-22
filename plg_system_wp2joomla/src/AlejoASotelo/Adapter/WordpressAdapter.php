@@ -2,6 +2,7 @@
 
 namespace AlejoASotelo\Adapter;
 
+use Joomla\Registry\Registry;
 use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
 use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
@@ -14,10 +15,13 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
 
     protected $user;
 
-    public function __construct($db, $user)
+    protected $wpContentPath;
+
+    public function __construct($db, $user, $wpContentPath)
     {
         $this->db = $db;
         $this->user = $user;
+        $this->wpContentPath = rtrim($wpContentPath, '/');
     }
 
     /**
@@ -70,6 +74,27 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
 			$article->urls = '{}';
 			$article->attribs = '{}';
 			$article->metadata = '{}';
+
+            $images = $this->findImagesByPostID($wpArticle->id);
+
+            if ($images) {
+                $image = $images[0];
+
+                $imagePath = ltrim($image->path, "/");
+                $imagePath = str_replace($this->wpContentPath, 'images/', $imagePath);
+                
+                $registry = new Registry();
+                $registry->set('image_intro', $imagePath);
+                $registry->set('image_intro_alt', $image->alt);
+                $registry->set('image_intro_caption', $image->caption);
+                $registry->set('float_intro', '');
+                $registry->set('image_fulltext', '');
+                $registry->set('image_fulltext_alt', '');
+                $registry->set('image_fulltext_caption', '');
+                $registry->set('float_fulltext', '');
+
+                $article->images = (string)$registry;
+            }
 
             $articles[] = $article;
         }
@@ -155,7 +180,6 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
 
     protected function getPosts()
     {
-        // SELECT * FROM wp_posts WHERE ID IN (SELECT object_id FROM wp_term_relationships WHERE wp_posts.post_type = 'post')
         $db    = $this->db;
         $query = $db->getQuery(true)
             ->select('ID as id, post_title as title, post_name alias, post_content as content, post_excerpt as introtext, post_date as created, post_modified as modified')
@@ -165,6 +189,33 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
         $db->setQuery($query);
 
         return $db->loadObjectList();
+    }
+    
+    /**
+     * Devuelve las imagenes de un post
+     *
+     * @param array|int $id
+     * @return array<(path, caption, alt)>
+     */
+    protected function findImagesByPostID($id)
+    {
+        if (!$id) {
+            return false;
+        }
+
+        $db = $this->db;
+        $query = $db->getQuery(true)
+            ->select('guid path, post_title caption, post_excerpt alt')
+            ->from($db->qn('wp_posts'))
+            ->where($db->qn('post_parent') . ' IN (' . $db->q($id) . ')')
+            ->where($db->qn('post_type') . ' = ' . $db->q('attachment'))
+            ->where($db->qn('post_mime_type') . ' LIKE ' . $db->q('image%'));
+
+        $db->setQuery($query);
+
+        $images = $db->loadObjectList();
+
+        return count($images) > 0 ? $images : false;
     }
 
     protected function getWPTags()

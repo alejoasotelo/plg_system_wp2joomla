@@ -111,7 +111,7 @@ class MigrateCategoriesCommand  extends AbstractCommand
     protected function migrateCategories()
     {
         $db = $this->getDatabase();
-        $adapter = new WordpressAdapter($db, $this->user);
+        $adapter = new WordpressAdapter($db, $this->user, '');
         $importer = new Importer($adapter, $this->ioStyle, $db);
         $importer->importCategories();
     }
