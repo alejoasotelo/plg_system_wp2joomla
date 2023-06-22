@@ -10,7 +10,8 @@
             "request": "launch",
             "port": 9003,
             "pathMappings": {
-                "/var/www/html/plugins/system/wp2joomla": "${workspaceFolder}/plg_system_wp2joomla"
+                "/var/www/html/plugins/system/wp2joomla": "${workspaceFolder}/plg_system_wp2joomla",
+                "/var/www/html/cli": "${workspaceFolder}/build",
             }
         },
     ]

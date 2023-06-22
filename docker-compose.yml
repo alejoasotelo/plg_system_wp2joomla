@@ -3,7 +3,9 @@ version: '3.9'
 name: wp2joomla
 services:
   joomla_php8:
-    image: joomla:4.3.1
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     restart: always
     links:
       - mysql:mysql
@@ -20,8 +22,10 @@ services:
       JOOMLA_DB_NAME: ${JOOMLA_DB_NAME}
       JOOMLA_DB_USER: ${JOOMLA_DB_USER}
       JOOMLA_DB_PASSWORD: ${JOOMLA_DB_PASSWORD}
+      XDEBUG_MODE: develop,debug
+      XDEBUG_CONFIG: client_host=host.docker.internal start_with_request=yes
     volumes:
-      - ./config/php.ini:/usr/local/etc/php/conf.d/zphp.ini
+      - ./docker/config/php.ini:/usr/local/etc/php/conf.d/zphp.ini
       - ./src:/var/www/html/cli/wp2joomla
       - ./plg_system_wp2joomla:/var/www/html/plugins/system/wp2joomla
       - joomla_files:/var/www/html
@@ -37,7 +41,7 @@ services:
       - MYSQL_PASSWORD=${JOOMLA_DB_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${JOOMLA_DB_PASSWORD}
     volumes:
-      - ./sql:/docker-entrypoint-initdb.d
+      - ./docker/sql:/docker-entrypoint-initdb.d
       - wp2joomla_db:/var/lib/mysql
 
   phpmyadmin:
