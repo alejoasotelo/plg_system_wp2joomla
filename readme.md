@@ -55,4 +55,4 @@ Una vez finalizado el proceso de migración en el Joomla de pruebas, si todo va 
 
 Aclaraciónes:
 1. ⚠️ Es importante el órden de ejecución de los comandos. Primero las categorías y luego los artículos. Los artículos dependen de las categorías.
-2. Si un post de Wordpress tiene más de una categoría se elegirá la primera que se obtenga desde la base de datos.3. 
+2. Si un post de Wordpress tiene más de una categoría se elegirá la primera que se obtenga desde la base de datos.
