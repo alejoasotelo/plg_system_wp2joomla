@@ -81,8 +81,8 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
             if ($images) {
                 $image = $images[0];
 
-                $imagePath = ltrim($image->path, "/");
-                $imagePath = str_replace($this->wpContentPath, 'images/', $imagePath);
+                $imagePath = str_replace($this->wpContentPath, '', $image->path);
+                $imagePath = 'images/' . ltrim($imagePath, "/");
                 
                 $registry = new Registry();
                 $registry->set('image_intro', $imagePath);
