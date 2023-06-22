@@ -6,6 +6,7 @@ use Joomla\Registry\Registry;
 use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
 use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
+use AlejoASotelo\Table\CategoryFinalTable;
 
 class WordpressAdapter implements Wp2JoomlaAdapterInterface
 {
