@@ -14,8 +14,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Adapter\WordpressAdapter;
+use AlejoASotelo\Adapter\K2Adapter;
 
 class MigrateArticlesCommand  extends AbstractCommand
 {
@@ -60,6 +60,8 @@ class MigrateArticlesCommand  extends AbstractCommand
      */
     protected $user;
 
+    protected $adapterName = 'wordpress';
+
     /**
      * Ruta de wordpress a la carpeta wp-content.
      * Ejemplos: 
@@ -99,10 +101,18 @@ class MigrateArticlesCommand  extends AbstractCommand
     protected function doExecute(InputInterface $input, OutputInterface $output): int
     {
         $this->configureIO($input, $output);
+        
+        $this->ioStyle->title('Desde dónde importar? wordpress o k2');
+        $this->adapterName = strtolower($this->getStringFromOption('adapter', 'Por favor ingrese wordpress o k2'));
+
+        if (!in_array($this->adapterName, ['wordpress', 'k2'])) {
+            $this->ioStyle->error("El adaptador " . $this->adapterName . " no existe!");
+
+            return Command::FAILURE;
+        }
+
         $this->ioStyle->title('Ingrese un Id de usuario');
         $this->userId       = (int)$this->getStringFromOption('userId', 'Por favor ingrese un ID de usuario');
-        $this->wpContentPath       = $this->getStringFromOption('wpContentPath', 'Por favor ingrese la url a la carpeta wp-content de Wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
-
         if (!$this->userId) {
             $this->ioStyle->error("El usuario #" . $this->userId . " no existe!");
 
@@ -117,10 +127,12 @@ class MigrateArticlesCommand  extends AbstractCommand
             return Command::FAILURE;
         }
 
-        if (empty($this->wpContentPath)) {
-            $this->ioStyle->error('La ruta a la carpeta wp-content no puede estar vacía');
-
-            return Command::FAILURE;
+        if ($this->adapterName == 'wordpress') {        
+            $this->wpContentPath = $this->getStringFromOption('wpContentPath', 'Por favor ingrese la url a la carpeta wp-content de Wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
+            if (empty($this->wpContentPath)) {
+                $this->ioStyle->error('La ruta a la carpeta wp-content no puede estar vacía');
+                return Command::FAILURE;
+            }
         }
 
         $this->migrateArticles();
@@ -131,7 +143,13 @@ class MigrateArticlesCommand  extends AbstractCommand
     protected function migrateArticles()
     {
         $db = $this->getDatabase();
-        $adapter = new WordpressAdapter($db, $this->user, $this->wpContentPath);
+
+        if ($this->adapterName == 'k2') {
+            $adapter = new K2Adapter($db, $this->user, '');
+        } else {
+            $adapter = new WordpressAdapter($db, $this->user, $this->wpContentPath);
+        }
+
         $importer = new Importer($adapter, $this->ioStyle, $db);
         $importer->importArticles();
     }
@@ -192,8 +210,11 @@ class MigrateArticlesCommand  extends AbstractCommand
         $this->addOption('userId', null, InputOption::VALUE_REQUIRED, 'userId');
         $this->setDescription('Ingrese un ID de usuario');
 
+        $this->addOption('adapter', null, InputOption::VALUE_REQUIRED, 'adapter');
+        $this->setDescription('Ingrese desde dónde importart wordpress o k2');
+
         $this->addOption('wpContentPath', null, InputOption::VALUE_REQUIRED, 'wpContentPath');
-        $this->setDescription('Ingrese la url a la carpeta wp-content de Wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
+        $this->setDescription('Ingrese la url a la carpeta wp-content de Wordpress si eligió el adaptador = wordpress. Ejemplo: http://miweb.com.ar/wp-content o http://miweb.com.ar/wordpress/wp-content');
         $this->setHelp($help);
     }
 }

@@ -11,6 +11,8 @@ use AlejoASotelo\Table\CategoryFinalTable;
 class K2Adapter implements Wp2JoomlaAdapterInterface
 {
 
+    const CATEGORY_UNCATEGORIZED = 2;
+
     protected $cache = [];
 
     protected $db;
@@ -37,68 +39,60 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
      */
     public function listArticles()
     {
-        return [];
-        /*$wpArticles = $this->getPosts();
+        $k2Articles = $this->getK2Articles();
 
-        $categoryDefault = 2;
         $category = new MigratorCategoryTable($this->db);
 
         $articles = [];
+        foreach ($k2Articles as $k2Article) {
 
-        foreach ($wpArticles as $wpArticle) {
-            $wpCategories = $this->getCategoriesFromPost($wpArticle->id);
-
-            if (count($wpCategories) > 0) {
-                $category->load(['id_adapter' => $wpCategories[0]]);
-                $categoryId = !$category->id ? $categoryDefault : $category->id_joomla;
+            if ($k2Article->catid > 0) {
+                $category->load(['id_adapter' => $k2Article->catid, 'adapter' => $this->getName()]);
+                $categoryId = !$category->id ? self::CATEGORY_UNCATEGORIZED : $category->id_joomla;
             } else {
-                $categoryId = $categoryDefault;
+                $categoryId = self::CATEGORY_UNCATEGORIZED;
             }
 
             $article = new ArticleFinalTable($this->db);
-            $article->id_adapter = $wpArticle->id;
+            $article->id_adapter = $k2Article->id;
             $article->catid = $categoryId;
-            $article->title = $wpArticle->title;
-            $article->alias = \JFilterOutput::stringURLSafe($wpArticle->title);
-            $article->published = 1;
-            $article->state = 1;
+            $article->title = $k2Article->title;
+            $article->alias = \JFilterOutput::stringURLSafe($k2Article->title);
+            $article->published = $k2Article->published;
+            $article->state = $k2Article->published;
             $article->language = '*';
-            $article->introtext = $wpArticle->content;
-            $article->fulltext = '';
-            $article->created = date('Y-m-d H:i:s', strtotime($wpArticle->created));
+            $article->introtext = $k2Article->introtext;
+            $article->fulltext = $k2Article->fulltext;
+            $article->created = $k2Article->created;
             $article->created_by = $this->user->id;
             $article->created_by_alias = $this->user->name;
-            $article->modified = date('Y-m-d H:i:s', strtotime($wpArticle->modified));
+            $article->modified = $k2Article->modified;
             $article->modified_by = $this->user->id;
-            $article->publish_up =null;
+            $article->publish_up = $k2Article->publish_up;
+            $article->publish_down = $k2Article->publish_down;
+            $article->access = $k2Article->access;
+            $article->featured = $k2Article->featured;
             $article->hits = 0;
             $article->metakey = '';
             $article->metadesc = '';
-            $article->access = 1;
-            $article->hits = 0;
-            $article->featured = 0;
+            $article->hits = $k2Article->hits;
 			$article->images = '{}';
 			$article->urls = '{}';
 			$article->attribs = '{}';
 			$article->metadata = '{}';
 
-            $images = $this->findImagesByPostID($wpArticle->id);
+            $image = $this->getK2ImagePath($k2Article->id);
 
-            if ($images) {
-                $image = $images[0];
-
-                $imagePath = str_replace($this->wpContentPath, '', $image->path);
-                $imagePath = 'images/' . ltrim($imagePath, "/");
-                
-                $registry = new Registry();
-                $registry->set('image_intro', $imagePath);
-                $registry->set('image_intro_alt', $image->alt);
-                $registry->set('image_intro_caption', $image->caption);
-                $registry->set('float_intro', '');
+            if (!empty($image)) {
+                $registry = new Registry;
+                $registry->set('image_intro', $image);
+                $registry->set('float_into', '');
+                $registry->set('image_intro_alt', '');
+                $registry->set('image_intro_caption', '');
                 $registry->set('image_fulltext', '');
+                $registry->set('float_fulltext', '');
                 $registry->set('image_fulltext_alt', '');
                 $registry->set('image_fulltext_caption', '');
-                $registry->set('float_fulltext', '');
 
                 $article->images = (string)$registry;
             }
@@ -106,7 +100,27 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             $articles[] = $article;
         }
 
-        return $articles;*/
+        return $articles;
+    }
+
+    public function getK2Articles()
+    {
+        $query = $this->db->getQuery(true);
+
+        $query
+            ->select('`id`, `title`, `alias`, `introtext`, `fulltext`, `created`, `catid`')
+            ->select('`published`')
+            ->select('`created_by_alias`, `checked_out`, `checked_out_time`, `modified`, `publish_up`, `publish_down`, `access`, `featured`, `hits`, `language`')
+            ->from('#__k2_items')
+            // ->setLimit(10)
+            ->order('id ASC');
+
+        return $this->db->setQuery($query)->loadObjectList();
+    }
+
+    public function getK2ImagePath($id) {
+        $filename = md5("Image" . $id);
+        return 'images/k2/' . $filename . '.jpg';
     }
 
     /**
