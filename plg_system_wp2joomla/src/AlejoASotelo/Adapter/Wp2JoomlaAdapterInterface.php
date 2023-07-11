@@ -7,6 +7,8 @@ interface Wp2JoomlaAdapterInterface
 
     public function __construct($db, $user, $wpContentPath);
 
+    public function getName();
+
     /**
      * Undocumented function
      *

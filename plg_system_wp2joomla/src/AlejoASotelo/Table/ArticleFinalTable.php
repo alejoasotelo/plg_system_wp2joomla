@@ -23,7 +23,7 @@ class ArticleFinalTable extends Content
     public function store($updateNulls = false)
     {
         $articleMigration = new MigratorArticleTable($this->_db);
-        $articleMigration->load(['id_adapter' => $this->id_adapter]);
+        $articleMigration->load(['id_adapter' => $this->id_adapter, 'adapter' => $this->adapter]);
 
         $this->id = $articleMigration->id_joomla;
         $this->isNew = !$articleMigration->id_joomla;
@@ -39,6 +39,7 @@ class ArticleFinalTable extends Content
             $articleMigration->title = $this->title;
             $articleMigration->id_joomla = $this->id;
             $articleMigration->id_adapter = $this->id_adapter;
+            $articleMigration->adapter = $this->adapter;
 
             $date = Factory::getDate()->toSql();
             if ($articleMigration->id) {

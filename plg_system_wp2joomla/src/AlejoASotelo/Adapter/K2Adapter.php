@@ -8,7 +8,7 @@ use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Table\CategoryFinalTable;
 
-class WordpressAdapter implements Wp2JoomlaAdapterInterface
+class K2Adapter implements Wp2JoomlaAdapterInterface
 {
 
     protected $cache = [];
@@ -27,7 +27,7 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
     }
 
     public function getName() {
-        return 'wordpress';
+        return 'k2';
     }
 
     /**
@@ -37,7 +37,8 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
      */
     public function listArticles()
     {
-        $wpArticles = $this->getPosts();
+        return [];
+        /*$wpArticles = $this->getPosts();
 
         $categoryDefault = 2;
         $category = new MigratorCategoryTable($this->db);
@@ -105,7 +106,7 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
             $articles[] = $article;
         }
 
-        return $articles;
+        return $articles;*/
     }
 
     /**
@@ -115,16 +116,17 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
      */
     public function listCategories()
     {
-        $wpCategories = $this->getCategories();
+        $k2Categories = $this->getCategories();
 
         $categories = [];
 
-        foreach ($wpCategories as $wpCategory) {
+        foreach ($k2Categories as $k2Category) {
             $category = new CategoryFinalTable($this->db);
-            $category->id_adapter = $wpCategory->id;
+            $category->id_adapter = $k2Category->id;
             $category->parent_id = 1;
-            $category->title = $wpCategory->name;
-            $category->alias = \JFilterOutput::stringURLSafe($wpCategory->name);
+            $category->parent_id_adapter = $k2Category->parent_id ?: 1;
+            $category->title = $k2Category->name;
+            $category->alias = \JFilterOutput::stringURLSafe($k2Category->name);
             $category->extension = 'com_content';
             $category->published = 1;
             $category->language = '*';
@@ -146,110 +148,41 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
 
     protected function getCategories()
     {
-        $cacheId = 'wp_categories';
+        $cacheId = 'getCategories';
 
         if (!isset($this->cache[$cacheId])) {
-            $db    = $this->db;
-            $query = $this->getWPTermsQuery($db, 'category');
-            $db->setQuery($query);
-
-            $this->cache[$cacheId] = $db->loadObjectList();
+            $this->cache[$cacheId] = $this->getK2CategoriesTree();
         }
 
         return $this->cache[$cacheId];
     }
 
-    public function getCategoriesFromPost($postId)
+    /**
+     * Devuelve el arbol de categorias K2 con los campos listos para categorías Joomla
+     *
+     * @param integer $offsetId Este valor se suma a los IDs de las categorías
+     * @return Array<object> Categorías K2
+     */
+    public function getK2CategoriesTree($parentId = 0, $level = 1)
     {
-        $db    = $this->db;
-        $query = $db->getQuery(true)
-            ->select('terms.term_id')
-            ->from($db->qn('wp_terms', 'terms'))
-            ->innerJoin($db->qn('wp_term_taxonomy', 'taxonomy') . ' ON ' . $db->qn('terms.term_id') . ' = ' . $db->qn('taxonomy.term_id'))
-            ->innerJoin($db->qn('wp_term_relationships', 'relationships') . ' ON ' . $db->qn('taxonomy.term_taxonomy_id') . ' = ' . $db->qn('relationships.term_taxonomy_id'))
-            ->innerJoin($db->qn('wp_posts', 'posts') . ' ON ' . $db->qn('relationships.object_id') . ' = ' . $db->qn('posts.ID'))
-            ->where($db->qn('taxonomy.taxonomy') . ' = ' . $db->q('category'))
-            ->where($db->qn('posts.ID') . ' = ' . $db->q($postId));
+        $query = $this->db->getQuery(true);
 
-        $db->setQuery($query);
+        $query
+            ->select('id, name, CONCAT(alias, "-k2") alias, published, access, parent parent_id, language, "com_content" extension, ' . $level . ' level, "" path, 0 asset_id')
+            ->from('#__k2_categories')
+            ->where('parent = ' . $parentId);
 
-        $wpCategories = $db->loadObjectList();
+        $categories = $this->db->setQuery($query)->loadObjectList();
 
-        $categories = [];
-
-        foreach ($wpCategories as $wpCategory) {
-            $categories[] = $wpCategory->term_id;
+        foreach ($categories as &$category) {
+            $children = $this->getK2CategoriesTree($category->id, $level + 1);
+            
+            foreach ($children as $child) {
+                $categories[] = $child;
+            }
         }
 
         return $categories;
-    }
-
-    protected function getPosts()
-    {
-        $db    = $this->db;
-        $query = $db->getQuery(true)
-            ->select('ID as id, post_title as title, post_name alias, post_content as content, post_excerpt as introtext, post_date as created, post_modified as modified')
-            ->from($db->qn('wp_posts'))
-            ->where($db->qn('ID') . ' IN (SELECT object_id FROM wp_term_relationships WHERE wp_posts.post_type = "post")');
-
-        $db->setQuery($query);
-
-        return $db->loadObjectList();
-    }
-    
-    /**
-     * Devuelve las imagenes de un post
-     *
-     * @param array|int $id
-     * @return array<(path, caption, alt)>
-     */
-    protected function findImagesByPostID($id)
-    {
-        if (!$id) {
-            return false;
-        }
-
-        $db = $this->db;
-        $query = $db->getQuery(true)
-            ->select('guid path, post_title caption, post_excerpt alt')
-            ->from($db->qn('wp_posts'))
-            ->where($db->qn('post_parent') . ' IN (' . $db->q($id) . ')')
-            ->where($db->qn('post_type') . ' = ' . $db->q('attachment'))
-            ->where($db->qn('post_mime_type') . ' LIKE ' . $db->q('image%'));
-
-        $db->setQuery($query);
-
-        $images = $db->loadObjectList();
-
-        return count($images) > 0 ? $images : false;
-    }
-
-    protected function getWPTags()
-    {
-        $cacheId = 'wp_categories';
-
-        if (!isset($this->cache[$cacheId])) {
-            $db    = $this->db;
-            $query = $this->getWPTermsQuery($db, 'post_tag');
-            $db->setQuery($query);
-
-            $this->cache[$cacheId] = $db->loadObjectList();
-        }
-
-        return $this->cache[$cacheId];
-    }
-
-    protected function getWPTermsQuery($db, $taxonomy)
-    {
-        // SELECT * FROM wp_terms WHERE term_id IN (SELECT term_id FROM wp_term_taxonomy WHERE taxonomy = 'category')
-        // SELECT * FROM wp_terms WHERE term_id IN (SELECT term_id FROM wp_term_taxonomy WHERE taxonomy = 'post_tag')
-        $query = $db->getQuery(true)
-            ->select('term_id as id, name')
-            ->from($db->qn('wp_terms'))
-            ->where($db->qn('term_id') . ' IN (SELECT term_id FROM wp_term_taxonomy WHERE taxonomy = :taxonomy)')
-            ->bind(':taxonomy', $taxonomy);
-
-        return $query;
     }
 
     public function setDatabase($db)

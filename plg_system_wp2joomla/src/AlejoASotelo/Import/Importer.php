@@ -43,7 +43,7 @@ class Importer
 
         foreach ($categories as $adapterCategory) {
             /** @var CategoryFinalTable $category */
-            $category = $this->saveCategory($adapterCategory);
+            $category = $this->saveCategory($adapterCategory, $this->adapter->getName());
             
             if (!$category) {
                 $this->io->error('Error al crear la categoría: ' . $adapterCategory->title);
@@ -63,7 +63,7 @@ class Importer
 
         foreach ($articles as $adapterArticle) {
             /** @var ArticleFinalTable $article */
-            $article = $this->saveArticle($adapterArticle);
+            $article = $this->saveArticle($adapterArticle, $this->adapter->getName());
             
             if (!$article) {
                 $this->io->error('Error al crear el artículo: ' . $adapterArticle->title);
@@ -83,8 +83,9 @@ class Importer
      * @param CategoryFinalTable $categoryFinal
      * @return void
      */
-    protected function saveCategory($categoryFinal)
+    protected function saveCategory($categoryFinal, $adapterName = 'wordpress')
     {
+        $categoryFinal->adapter = $adapterName;
         if (!$categoryFinal->store()) {
             $this->io->error('Error al crear la categoría: ' . \JText::_($categoryFinal->getError()));
             return false;
@@ -99,8 +100,9 @@ class Importer
      * @param ArticleFinalTable $articleFinal
      * @return void
      */
-    protected function saveArticle($articleFinal)
+    protected function saveArticle($articleFinal, $adapterName = 'wordpress')
     {
+        $articleFinal->adapter = $adapterName;
         if (!$articleFinal->store()) {
             $this->io->error('Error al crear el artículo: ' . \JText::_($articleFinal->getError()));
             return false;

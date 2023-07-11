@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use AlejoASotelo\Adapter\WordpressAdapter;
+use AlejoASotelo\Adapter\K2Adapter;
 
 class MigrateCategoriesCommand  extends AbstractCommand
 {
@@ -56,6 +57,8 @@ class MigrateCategoriesCommand  extends AbstractCommand
      * @var User
      */
     protected $user;
+
+    protected $adapterName = 'wordpress';
 
     protected $cache = [];
 
@@ -102,6 +105,15 @@ class MigrateCategoriesCommand  extends AbstractCommand
 
             return Command::FAILURE;
         }
+        
+        $this->ioStyle->title('Desde dónde importar? wordpress o k2');
+        $this->adapterName = strtolower($this->getStringFromOption('adapter', 'Por favor ingrese wordpress o k2'));
+
+        if (!in_array($this->adapterName, ['wordpress', 'k2'])) {
+            $this->ioStyle->error("El adaptador " . $this->adapterName . " no existe!");
+
+            return Command::FAILURE;
+        } 
 
         $this->migrateCategories();
 
@@ -111,7 +123,12 @@ class MigrateCategoriesCommand  extends AbstractCommand
     protected function migrateCategories()
     {
         $db = $this->getDatabase();
-        $adapter = new WordpressAdapter($db, $this->user, '');
+
+        if ($this->adapterName == 'k2') {
+            $adapter = new K2Adapter($db, $this->user, '');
+        } else {
+            $adapter = new WordpressAdapter($db, $this->user, '');
+        }
         $importer = new Importer($adapter, $this->ioStyle, $db);
         $importer->importCategories();
     }
@@ -171,6 +188,9 @@ class MigrateCategoriesCommand  extends AbstractCommand
 
         $this->addOption('userId', null, InputOption::VALUE_REQUIRED, 'userId');
         $this->setDescription('Ingrese un ID de usuario');
+
+        $this->addOption('adapter', null, InputOption::VALUE_REQUIRED, 'adapter');
+        $this->setDescription('Ingrese desde dónde importart wordpress o k2');
         $this->setHelp($help);
     }
 }
