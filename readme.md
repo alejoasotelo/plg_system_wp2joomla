@@ -42,13 +42,19 @@ Vamos a la consola de comandos del servidor y nos ubicamos en la carpeta raíz d
 
 Importamos las categorías de Wordpress en Joomla 4 con:
 ```bash
-php cli/joomla.php migrate:categories
+php cli/joomla.php migrate:categories --adapter=wordpress
+
+# Si queremos importar sabiendo el id del usuario que se le asignará a las categorías:
+php cli/joomla.php migrate:categories --userId=123 --adapter=wordpress
 ```
 
 y luego los Posts de wordpress con:
 
 ```bash
-php cli/joomla.php migrate:articles
+php cli/joomla.php migrate:articles --adapter=wordpress
+
+# Si queremos importar sabiendo el id del usuario que se le asignará a los artículos:
+php cli/joomla.php migrate:articles --userId=123 --adapter=wordpress
 ```
 
 Una vez finalizado el proceso de migración en el Joomla de pruebas, si todo va bien, podemos migrar los datos en el Joomla de producción.
