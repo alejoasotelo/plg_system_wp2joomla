@@ -1,22 +1,22 @@
-# Wp2Joomla - Migración de Posts de Wordpress a Joomla 4
+# Wp2Joomla - Migración de Posts de Wordpress o K2 a Joomla 4
 
-Plugin para Joomla 4 que permite migrar artículos y categorías de Wordpress a Joomla 4 desde la consola de comandos.
+Plugin para Joomla 4 que permite migrar artículos y categorías de Wordpress o K2 a Joomla 4 desde la consola de comandos.
 
 ## 🐳 Docker
 
 1. Renombrar el archivo .env.dist a .env
-2. Poner el dump.sql de tu wordpress en la carpeta `docker/sql/wordpress.sql`. **Es obligatorio que el prefijo de las tablas de wordpress sea `wp_`** (*al levantar docker se instalará la base de datos de wordpress en mysql automáticamente.*)
-3. Para levantar Joomla 4 de pruebas en docker posicionarse en la carpeta raíz de este proyecto y desde bash ejecutar:
+2. Poner el dump.sql de tu wordpress o k2 en la carpeta `docker/sql/wordpress.sql` o `docker/sql/k2.sql` respectivamente. **Es obligatorio que el prefijo de las tablas de wordpress sea `wp_` y para K2 el prefijo de las tablas tienen que ser igual al de Joomla 4** (*al levantar docker se instalará la base de datos de wordpress o k2 en mysql automáticamente.*)
+4. Para levantar Joomla 4 de pruebas en docker posicionarse en la carpeta raíz de este proyecto y desde bash ejecutar:
     ```bash
     docker compose up -d
     ```
-4. Ir a http://localhost para instalar Joomla 4 como cualquier instalación
-5. En los datos de la base de datos configurar:
+5. Ir a http://localhost para instalar Joomla 4 como cualquier instalación
+6. En los datos de la base de datos configurar:
    - Host de la base de datos: mysql
    - Base de datos: joomla
    - Usuario: joomla
    - Password: joomla
-6. Ir a http://localhost/administrator
+7. Ir a http://localhost/administrator
 
 ### Instalar Plugin en Joomla 4 dentro del contenedor
 
@@ -40,6 +40,8 @@ Plugin para Joomla 4 que permite migrar artículos y categorías de Wordpress a 
 Podemos usar Docker siguiente los pasos del punto anterior o tener instalado un Joomla 4 de pruebas con un xampp/wampp/servidor. Importar la base de datos de wordpress con el prefijo wp_ en la misma base de datos que Joomla 4. Una vez importada la base de datos, instalamos el plugin de la carpeta plg_system_wp2joomla en Joomla 4 como cualquier extensión desde el instalador en el administrador de Joomla 4 y lo habilitamos.
 Vamos a la consola de comandos del servidor y nos ubicamos en la carpeta raíz de Joomla 4.
 
+### Wordpress
+
 Importamos las categorías de Wordpress en Joomla 4 con:
 ```bash
 php cli/joomla.php migrate:categories --adapter=wordpress
@@ -57,8 +59,29 @@ php cli/joomla.php migrate:articles --adapter=wordpress
 php cli/joomla.php migrate:articles --userId=123 --adapter=wordpress
 ```
 
+### K2
+
+Importamos las categorías de K2 en Joomla 4 con:
+```bash
+php cli/joomla.php migrate:categories --adapter=k2
+
+# Si queremos importar sabiendo el id del usuario que se le asignará a las categorías:
+php cli/joomla.php migrate:categories --userId=123 --adapter=k2
+```
+
+y luego los Posts de K2 con:
+
+```bash
+php cli/joomla.php migrate:articles --adapter=k2
+
+# Si queremos importar sabiendo el id del usuario que se le asignará a los artículos:
+php cli/joomla.php migrate:articles --userId=123 --adapter=k2
+```
+
+### 📝 Notas
+
 Una vez finalizado el proceso de migración en el Joomla de pruebas, si todo va bien, podemos migrar los datos en el Joomla de producción.
 
-Aclaraciónes:
+**Aclaraciónes:**
 1. ⚠️ Es importante el órden de ejecución de los comandos. Primero las categorías y luego los artículos. Los artículos dependen de las categorías.
 2. Si un post de Wordpress tiene más de una categoría se elegirá la primera que se obtenga desde la base de datos.
