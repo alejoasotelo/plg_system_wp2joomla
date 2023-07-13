@@ -69,7 +69,7 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             $article->modified = $k2Article->modified;
             $article->modified_by = $this->user->id;
             $article->publish_up = $k2Article->publish_up;
-            $article->publish_down = $k2Article->publish_down;
+            $article->publish_down = null;
             $article->access = $k2Article->access;
             $article->featured = $k2Article->featured;
             $article->hits = 0;
