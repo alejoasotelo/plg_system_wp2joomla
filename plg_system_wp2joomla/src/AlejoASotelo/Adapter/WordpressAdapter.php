@@ -144,6 +144,11 @@ class WordpressAdapter implements Wp2JoomlaAdapterInterface
         return $categories;
     }
 
+    public function listTags()
+    {
+        return [];
+    }
+
     protected function getCategories()
     {
         $cacheId = 'wp_categories';

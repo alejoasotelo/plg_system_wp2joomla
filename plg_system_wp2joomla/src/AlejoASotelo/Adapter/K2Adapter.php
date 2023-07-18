@@ -7,6 +7,7 @@ use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
 use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Table\CategoryFinalTable;
+use AlejoASotelo\Table\TagFinalTable;
 
 class K2Adapter implements Wp2JoomlaAdapterInterface
 {
@@ -158,6 +159,41 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
         }
 
         return $categories;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return array
+     */
+    public function listTags()
+    {
+        $k2Categories = $this->getCategories();
+
+        $tags = [];
+
+        foreach ($k2Categories as $k2Category) {
+            $tag = new TagFinalTable($this->db);
+            $tag->id_adapter = $k2Category->id;
+            $tag->parent_id = 1;
+            $tag->parent_id_adapter = $k2Category->parent_id ?: 1;
+            $tag->title = $k2Category->name;
+            $tag->alias = \JFilterOutput::stringURLSafe($k2Category->name);
+            $tag->description = '';
+            $tag->published = 1;
+            $tag->level = $k2Category->level;
+            $tag->language = '*';
+            $tag->params = json_encode(['tag_layout' => '', 'tag_link_class' => '']);
+            $tag->metadata = json_encode(['author' => '', 'robots' => '']);
+            $tag->metadesc = '';
+            $tag->metakey = '';
+            $tag->images = '{"image_intro":"","float_intro":"","image_intro_alt":"","image_intro_caption":"","image_fulltext":"","float_fulltext":"","image_fulltext_alt":"","image_fulltext_caption":""}';
+            $tag->urls = '{}';
+
+            $tags[] = $tag;
+        }
+
+        return $tags;
     }
 
     protected function getCategories()

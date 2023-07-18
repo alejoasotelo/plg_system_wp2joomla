@@ -10,6 +10,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\SubscriberInterface;
 use Psr\Container\ContainerInterface;
+use AlejoASotelo\Console\MigrateTagsCommand;
 use AlejoASotelo\Console\MigrateCategoriesCommand;
 use AlejoASotelo\Console\MigrateArticlesCommand;
 
@@ -33,6 +34,14 @@ class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
             },
             true
         );
+
+        Factory::getContainer()->share(
+            'migrate.tags',
+            function (ContainerInterface $container) {
+                return new MigrateTagsCommand($this->db);
+            },
+            true
+        );
         
         Factory::getContainer()->share(
             'migrate.articles',
@@ -42,6 +51,7 @@ class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
             true
         );
 
+        Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:tags', 'migrate.tags');
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:categories', 'migrate.categories');
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:articles', 'migrate.articles');
     }

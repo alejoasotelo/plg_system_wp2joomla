@@ -23,6 +23,11 @@ interface Wp2JoomlaAdapterInterface
      */
     public function listCategories();
 
+    /**
+     * @return array
+     */
+    public function listTags();
+
     public function setDatabase($db);
 
     public function getDatabase();

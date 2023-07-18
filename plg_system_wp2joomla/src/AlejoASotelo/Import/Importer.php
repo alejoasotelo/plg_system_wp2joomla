@@ -57,6 +57,26 @@ class Importer
         return true;
     }
 
+    public function importTags()
+    {
+        $tags = $this->adapter->listTags();
+
+        foreach ($tags as $adapterTag) {
+            /** @var TagFinalTable $tag */
+            $tag = $this->saveTag($adapterTag, $this->adapter->getName());
+            
+            if (!$tag) {
+                $this->io->error('Error al crear el tag: ' . $adapterTag->title);
+            } else {
+                $this->io->writeln('Tag '.($tag->isNew ? 'creado' : 'actualizado').': ' . $tag->title);
+            }
+        }
+
+        $this->io->success("Tags migrados!");
+
+        return true;
+    }
+
     public function importArticles()
     {
         $articles = $this->adapter->listArticles();
@@ -92,6 +112,17 @@ class Importer
         }
         
         return $categoryFinal;
+    }
+    
+    protected function saveTag($tagFinal, $adapterName = 'k2')
+    {
+        $tagFinal->adapter = $adapterName;
+        if (!$tagFinal->store()) {
+            $this->io->error('Error al crear el tag: ' . \JText::_($tagFinal->getError()));
+            return false;
+        }
+        
+        return $tagFinal;
     }
 
     /**
