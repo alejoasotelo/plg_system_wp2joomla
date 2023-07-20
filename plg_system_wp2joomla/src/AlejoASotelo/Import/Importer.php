@@ -5,6 +5,7 @@ namespace AlejoASotelo\Import;
 use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
 use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Table\CategoryFinalTable;
+use AlejoASotelo\Table\TagFinalTable;
 
 class Importer
 {
@@ -101,6 +102,8 @@ class Importer
      * Undocumented function
      *
      * @param CategoryFinalTable $categoryFinal
+     * @param string $adapterName
+     * 
      * @return void
      */
     protected function saveCategory($categoryFinal, $adapterName = 'wordpress')
@@ -114,6 +117,14 @@ class Importer
         return $categoryFinal;
     }
     
+    /**
+     * Undocumented function
+     *
+     * @param TagFinalTable $tagFinal
+     * @param string $adapterName
+     * 
+     * @return void
+     */
     protected function saveTag($tagFinal, $adapterName = 'k2')
     {
         $tagFinal->adapter = $adapterName;
@@ -141,5 +152,4 @@ class Importer
         
         return $articleFinal;
     }
-
 }

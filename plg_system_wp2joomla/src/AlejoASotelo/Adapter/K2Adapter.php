@@ -8,6 +8,7 @@ use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
 use AlejoASotelo\Table\CategoryFinalTable;
 use AlejoASotelo\Table\TagFinalTable;
+use Joomla\String\StringHelper;
 
 class K2Adapter implements Wp2JoomlaAdapterInterface
 {
@@ -58,7 +59,7 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             $article->id_adapter = $k2Article->id;
             $article->catid = $categoryId;
             $article->title = $k2Article->title;
-            $article->alias = \JFilterOutput::stringURLSafe($k2Article->title);
+            $article->alias = $this->generateNewAlias($articles, \JFilterOutput::stringURLSafe($k2Article->title), $article->id_adapter);
             $article->published = $k2Article->published;
             $article->state = $k2Article->published;
             $article->language = '*';
@@ -141,7 +142,7 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             $category->parent_id = 1;
             $category->parent_id_adapter = $k2Category->parent_id ?: 1;
             $category->title = $k2Category->name;
-            $category->alias = \JFilterOutput::stringURLSafe($k2Category->name);
+            $category->alias = $this->generateNewAlias($categories, \JFilterOutput::stringURLSafe($k2Category->name), $category->id_adapter);
             $category->extension = 'com_content';
             $category->published = 1;
             $category->language = '*';
@@ -178,7 +179,7 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             $tag->parent_id = 1;
             $tag->parent_id_adapter = $k2Category->parent_id ?: 1;
             $tag->title = $k2Category->name;
-            $tag->alias = \JFilterOutput::stringURLSafe($k2Category->name);
+            $tag->alias = $this->generateNewAlias($tags, \JFilterOutput::stringURLSafe($k2Category->name), $tag->id_adapter);
             $tag->description = '';
             $tag->published = 1;
             $tag->level = $k2Category->level;
@@ -194,6 +195,22 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
         }
 
         return $tags;
+    }
+
+    protected function generateNewAlias($items, $alias, $idAdapter)
+    {
+        $i = 0;
+        $len = count($items);
+        while ($i < $len) {
+            if ($items[$i]->alias == $alias && $items[$i]->id_adapter != $idAdapter) {
+                $alias = StringHelper::increment($alias, 'dash');
+                $i = -1;
+            }
+            
+            $i++;
+        }
+        
+        return $alias;
     }
 
     protected function getCategories()
