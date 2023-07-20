@@ -13,6 +13,7 @@ use Psr\Container\ContainerInterface;
 use AlejoASotelo\Console\MigrateTagsCommand;
 use AlejoASotelo\Console\MigrateCategoriesCommand;
 use AlejoASotelo\Console\MigrateArticlesCommand;
+use AlejoASotelo\Console\DeleteMigratedArticlesCommand;
 
 class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
 {
@@ -50,10 +51,20 @@ class PlgSystemWP2Joomla extends CMSPlugin implements SubscriberInterface
             },
             true
         );
+        
+        Factory::getContainer()->share(
+            'delete.migrate.articles',
+            function (ContainerInterface $container) {
+                return new DeleteMigratedArticlesCommand($this->db);
+            },
+            true
+        );
 
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:tags', 'migrate.tags');
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:categories', 'migrate.categories');
         Factory::getContainer()->get(WritableLoaderInterface::class)->add('migrate:articles', 'migrate.articles');
+        Factory::getContainer()->get(WritableLoaderInterface::class)->add('delete:migrate:articles', 'delete.migrate.articles');
+        
     }
 
 }

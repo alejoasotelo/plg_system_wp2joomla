@@ -6,6 +6,7 @@ use Joomla\Registry\Registry;
 use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
 use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
+use AlejoASotelo\Table\MigratorTagTable;
 use AlejoASotelo\Table\CategoryFinalTable;
 use AlejoASotelo\Table\TagFinalTable;
 use Joomla\String\StringHelper;
@@ -44,6 +45,7 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
         $k2Articles = $this->getK2Articles();
 
         $category = new MigratorCategoryTable($this->db);
+        $tag = new MigratorTagTable($this->db);
 
         $articles = [];
         foreach ($k2Articles as $k2Article) {
@@ -51,8 +53,12 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
             if ($k2Article->catid > 0) {
                 $category->load(['id_adapter' => $k2Article->catid, 'adapter' => $this->getName()]);
                 $categoryId = !$category->id ? self::CATEGORY_UNCATEGORIZED : $category->id_joomla;
+                
+                $tag->load(['id_adapter' => $k2Article->catid, 'adapter' => $this->getName()]);
+                $tags = $tag->id ? [$tag->id_joomla] : [];
             } else {
                 $categoryId = self::CATEGORY_UNCATEGORIZED;
+                $tags = [];
             }
 
             $article = new ArticleFinalTable($this->db);
@@ -81,6 +87,8 @@ class K2Adapter implements Wp2JoomlaAdapterInterface
 			$article->images = '{}';
 			$article->urls = '{}';
 			$article->attribs = '{}';
+            $article->tags = json_encode($tags);
+            $article->newTags = json_encode($tags);
 			$article->metadata = '{}';
 
             $image = $this->getK2ImagePath($k2Article->id);
