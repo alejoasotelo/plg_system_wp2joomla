@@ -3,7 +3,9 @@
 namespace AlejoASotelo\Import;
 
 use AlejoASotelo\Adapter\Wp2JoomlaAdapterInterface;
+use AlejoASotelo\Table\ArticleFinalTable;
 use AlejoASotelo\Table\MigratorCategoryTable;
+use AlejoASotelo\Table\MigratorArticleTable;
 use AlejoASotelo\Table\CategoryFinalTable;
 use AlejoASotelo\Table\TagFinalTable;
 
@@ -98,6 +100,40 @@ class Importer
         return true;
     }
 
+    public function deleteArticles()
+    {
+        $migratorTable = new MigratorArticleTable($this->db);
+        $articles = $migratorTable->find(['adapter' => $this->adapter->getName()]);
+
+        foreach ($articles as $article) {
+            $migratorTable->reset();
+            $migratorTable->bind($article);
+
+            $title = $article->title;
+
+            /** @var ArticleFinalTable $article */
+            $joomlaArticle = new ArticleFinalTable($this->db);
+            $joomlaArticle->load(['id' => $article->id_joomla]);
+            
+            if (!$joomlaArticle->id) {
+                $migratorTable->bind($article);
+                $migratorTable->delete();
+                $this->io->success('Artículo sin vinculo eliminado: ' . $title);
+                continue;
+            }
+
+            if ($joomlaArticle->delete() && $migratorTable->delete()) {
+                $this->io->writeln('Artículo eliminado: ' . $title);
+            } else {
+                $this->io->error('Error al eliminar el artículo: ' . $title);
+            }
+        }
+
+        $this->io->success("Artículos migrados eliminados!");
+
+        return true;
+    }
+
     /**
      * Undocumented function
      *
@@ -140,6 +176,8 @@ class Importer
      * Undocumented function
      *
      * @param ArticleFinalTable $articleFinal
+     * @param string $adapterName
+     * 
      * @return void
      */
     protected function saveArticle($articleFinal, $adapterName = 'wordpress')
@@ -147,6 +185,25 @@ class Importer
         $articleFinal->adapter = $adapterName;
         if (!$articleFinal->store()) {
             $this->io->error('Error al crear el artículo: ' . \JText::_($articleFinal->getError()));
+            return false;
+        }
+        
+        return $articleFinal;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param ArticleFinalTable $articleFinal
+     * @param string $adapterName
+     * 
+     * @return void
+     */
+    protected function deleteArticle($articleFinal, $adapterName = 'wordpress')
+    {
+        $articleFinal->adapter = $adapterName;
+        if (!$articleFinal->delete()) {
+            $this->io->error('Error al eliminar el artículo: ' . \JText::_($articleFinal->getError()));
             return false;
         }
         
